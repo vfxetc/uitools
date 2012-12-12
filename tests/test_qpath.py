@@ -40,8 +40,7 @@ class TestQPath(TestCase):
         root = Object(A(B(tail)))
 
         self.assertEqual(qpath(root, 'A/B/X'), [tail])
-
-        self.assertNotEqual(qpath(root, 'A/C/X'), [tail])
+        self.assertEqual(qpath(root, 'A/C/X'), [])
 
     def test_self(self):
 
@@ -79,7 +78,7 @@ class TestQPath(TestCase):
         self.assertEqual(qpath(root, 'A/C/X'), [tail])
         self.assertEqual(qpath(root, 'A/Object/X'), [tail])
         self.assertEqual(qpath(root, 'A/object/X'), [tail])
-        self.assertNotEqual(qpath(root, 'A/X/X'), [tail])
+        self.assertEqual(qpath(root, 'A/X/X'), [])
 
     def test_descendant_or_self(self):
 
@@ -96,6 +95,14 @@ class TestQPath(TestCase):
         root = Object(A(B(tail)))
 
         self.assertEqual(qpath(root, '//[@name() == "tail"]'), [tail])
+
+    def test_attribute_search(self):
+
+        tail = X(name="Do Export Now")
+        root = Object(A(B(tail)))
+
+        self.assertEqual(qpath(root, '//[@name() ~i "export"]'), [tail])
+        self.assertEqual(qpath(root, '//[@name() ~i "import"]'), [])
 
     def test_pass_globals(self):
 

@@ -155,9 +155,21 @@ def _apply_filter(node_iter, filter_expr, globals_):
     # Convert attribute syntax.
     filter_expr = re.sub(r'@(\w+)', lambda m: r'getattr(self, %r, NotSet)' % m.group(1), filter_expr)
 
+    # Convert match syntax.
+    m = re.match(r'^(.+?)\s*~([i]*)\s*(.+?)$', filter_expr)
+    if m:
+        expr, flags, pattern = m.groups()
+        filter_expr = 'search(%s, str(%s), %s)' % (pattern, expr, '|'.join('re.%s' % x.upper() for x in flags))
+
     expr = compile(filter_expr, '<qpath:%r>' % filter_expr, 'eval')
     for node in node_iter:
-        namespace = _FilterNamespace(node, self=node, NotSet=_NotSet)
+        namespace = _FilterNamespace(node,
+            self=node,
+            NotSet=_NotSet,
+            re=re,
+            match=re.match,
+            search=re.search,
+        )
         res = eval(expr, globals_ or {}, namespace)
         if res:
             yield node
