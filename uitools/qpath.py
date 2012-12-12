@@ -1,4 +1,4 @@
-"""XPath-like query system, designed for testing Qt but usable elsewhere.
+"""XPath-like query system, designed for axising Qt but usable elsewhere.
 
 Differences from XPath:
 
@@ -27,7 +27,7 @@ import re
 
 
 _query_re = re.compile(r'/?(/|[^/]*)')
-
+_axis_re = re.compile(r'^\s*(.*?)\s*(?:\[(.+)\])?\s*$')
 
 def qpath(root, query):
     """Return a list of results by applying a query string to a context.
@@ -53,35 +53,45 @@ def _qpath_filter(node_iter, query):
             raise ValueError('could not parse query: %r' % query)
         return []
 
-    test = m.group(1)
+    axis = m.group(1)
     query = query[m.end(0):]
 
-    # Finished.
-    if not test:
+    m = _axis_re.match(axis)
+    if m:
+        axis, filter_expr = m.groups()
+    else:
+        filter_expr = None
+
+    if axis:
+        node_iter = _apply_axis(node_iter, axis)
+
+    if query:
+        return _qpath_filter(node_iter, query)
+    else:
         return node_iter
 
-    # "self"
-    if test == '.':
-        return _qpath_filter(node_iter, query)
 
-    # "parent"
-    if test == '..':
-        node_iter = (x.parent() for x in node_iter)
-        return _qpath_filter(node_iter, query)
+def _apply_axis(node_iter, axis):
 
-    # "descendant-or-self"
-    if test == '/':
-        node_iter = _descendant_or_self(node_iter)
-        return _qpath_filter(node_iter, query)
+    # "self".
+    if axis in ('.', '*'):
+        return node_iter
+
+    # "parent".
+    if axis == '..':
+        return (x.parent() for x in node_iter)
+
+    # "descendant-or-self".
+    if axis == '/':
+        return _descendant_or_self(node_iter)
 
     # Simple class names -> pass through children which match.
-    m = re.match(r'^([a-zA-Z_]\w*)$', test)
+    m = re.match(r'^([a-zA-Z_]\w*)$', axis)
     if m:
         class_name = m.group(1)
-        node_iter = _test_class(_child_iter(node_iter), class_name)
-        return _qpath_filter(node_iter, query)
+        return _test_class(_child_iter(node_iter), class_name)
 
-    raise ValueError('did not understand test: %r' % test)
+    raise ValueError('did not understand axis: %r' % axis)
 
 
 def _descendant_or_self(node_iter):

@@ -5,11 +5,13 @@ from uitools.qpath import qpath
 
 class Object(list):
 
-    def __init__(self, *args):
+    def __init__(self, *args, **kwargs):
         super(Object, self).__init__(args)
         self._parent = None
         for x in args:
             x._parent = self
+        for k, v in kwargs.iteritems():
+            setattr(self, k, lambda: v)
 
     def __repr__(self):
         return '%s(%s)' % (self.__class__.__name__, ', '.join(repr(x) for x in self))
