@@ -24,6 +24,7 @@ Axis specifiers:
 
 import itertools
 import re
+import fnmatch
 
 
 _query_re = re.compile(r'/?(/|[^/]*)')
@@ -45,7 +46,6 @@ def qpath(root, query, globals=None):
 def qpath_iter(node_iter, query, globals=None):
 
     node_iter = list(node_iter)
-    print 'qpath_iter(%r, %r)' % (node_iter, query)
 
     m = _query_re.match(query)
     if not m:
@@ -88,10 +88,10 @@ def _apply_axis(node_iter, axis):
         return _descendant_or_self(node_iter)
 
     # Simple class names -> pass through children which match.
-    m = re.match(r'^([a-zA-Z_]\w*)$', axis)
+    m = re.match(r'^((?:[a-zA-Z_*+][\w*+]*\.)*)([a-zA-Z_*+][\w*+]*)$', axis)
     if m:
-        class_name = m.group(1)
-        return _test_class(_child_iter(node_iter), class_name)
+        module_name, class_name = m.groups()
+        return _test_class(_child_iter(node_iter), module_name, class_name)
 
     raise ValueError('did not understand axis: %r' % axis)
 
@@ -109,10 +109,19 @@ def _child_iter(node_iter):
             yield child
 
 
-def _test_class(node_iter, class_name):
+def _test_class(node_iter, module_name, class_name):
+
+    class_re = re.compile(fnmatch.translate(class_name))
+
+    module_name = module_name.rstrip('.')
+    module_re = re.compile(fnmatch.translate(module_name)) if module_name else None
+
     for node in node_iter:
-        print '_test_class(..., %r) on %r' % (class_name, node)
-        if any(base.__name__ == class_name for base in node.__class__.__mro__):
+        for base in node.__class__.__mro__:
+            if not class_re.match(base.__name__):
+                continue
+            if module_re and not module_re.match(base.__module__):
+                continue
             yield node
 
 
@@ -150,13 +159,16 @@ class _NotSetType(object):
 
 _NotSet = _NotSetType()
 
+_search_re = re.compile(r'^(.+?)\s*~([i]*)\s*(.+?)$')
+
+
 def _apply_filter(node_iter, filter_expr, globals_):
 
     # Convert attribute syntax.
     filter_expr = re.sub(r'@(\w+)', lambda m: r'getattr(self, %r, NotSet)' % m.group(1), filter_expr)
 
     # Convert match syntax.
-    m = re.match(r'^(.+?)\s*~([i]*)\s*(.+?)$', filter_expr)
+    m = _search_re.match(filter_expr)
     if m:
         expr, flags, pattern = m.groups()
         filter_expr = 'search(%s, str(%s), %s)' % (pattern, expr, '|'.join('re.%s' % x.upper() for x in flags))

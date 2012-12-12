@@ -25,11 +25,17 @@ class Object(list):
 A = type('A', (Object, ), {})
 B = type('B', (Object, ), {})
 C = type('C', (Object, ), {})
-X = type('X', (Object, ), {})
-Y = type('Y', (Object, ), {})
-Z = type('Z', (Object, ), {})
 ABC = type('ABC', (A, B, C), {})
-XYZ = type('XYZ', (X, Y, Z), {})
+
+X = type('X', (Object, ), {})
+
+aW = type('W', (Object, ), {})
+aW.__module__ = 'a'
+bW = type('W', (Object, ), {})
+bW.__module__ = 'b'
+
+axZ = type('Z', (Object, ), {})
+axZ.__module__ = 'a.x'
 
 
 class TestQPath(TestCase):
@@ -51,6 +57,29 @@ class TestQPath(TestCase):
         self.assertEqual(qpath(root, 'A/./B/X'), [tail])
         self.assertEqual(qpath(root, 'A/B/./X'), [tail])
         self.assertEqual(qpath(root, 'A/B/X/.'), [tail])
+
+    def test_modules(self):
+
+        tail = X()
+        root = Object(aW(bW(tail)))
+
+        self.assertEqual(qpath(root, 'W/W/X'), [tail])
+        self.assertEqual(qpath(root, 'a.W/W/X'), [tail])
+        self.assertEqual(qpath(root, 'W/b.W/X'), [tail])
+        self.assertEqual(qpath(root, 'W/a.W/X'), [])
+
+    def test_globs(self):
+
+        tail = X()
+        root = Object(axZ(ABC(tail)))
+
+        self.assertEqual(qpath(root, 'Z/ABC/X'), [tail])
+        self.assertEqual(qpath(root, 'a.x.Z/A/X'), [tail])
+        self.assertEqual(qpath(root, 'a.*.Z/B/X'), [tail])
+        self.assertEqual(qpath(root, '*.x.Z/C/X'), [tail])
+        self.assertEqual(qpath(root, '*.y.Z/ABC/X'), [])
+        self.assertEqual(qpath(root, 'Z/A*C/X'), [tail])
+        self.assertEqual(qpath(root, 'Z/ABC+/X'), [])
 
     def test_parent(self):
 
