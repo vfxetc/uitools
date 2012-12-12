@@ -130,8 +130,8 @@ class TestQPath(TestCase):
         tail = X(name="Do Export Now")
         root = Object(A(B(tail)))
 
-        self.assertEqual(qpath(root, '//[@name() ~i "export"]'), [tail])
-        self.assertEqual(qpath(root, '//[@name() ~i "import"]'), [])
+        self.assertEqual(qpath(root, '//[@name() ~i *export*]'), [tail])
+        self.assertEqual(qpath(root, '//[@name() ~i *import*]'), [])
 
     def test_pass_globals(self):
 

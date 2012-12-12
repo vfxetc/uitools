@@ -171,8 +171,8 @@ def _apply_filter(node_iter, filter_expr, globals_):
     m = _search_re.match(filter_expr)
     if m:
         expr, flags, pattern = m.groups()
-        filter_expr = 'search(%s, str(%s), %s)' % (pattern, expr, '|'.join('re.%s' % x.upper() for x in flags))
-
+        filter_expr = 'match(%r, str(%s), %s)' % (fnmatch.translate(pattern), expr, '|'.join('re.%s' % x.upper() for x in flags))
+        
     expr = compile(filter_expr, '<qpath:%r>' % filter_expr, 'eval')
     for node in node_iter:
         namespace = _FilterNamespace(node,
