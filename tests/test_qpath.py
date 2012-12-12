@@ -90,6 +90,20 @@ class TestQPath(TestCase):
         self.assertEqual(qpath(root, 'A//X'), [tail])
         self.assertEqual(qpath(root, '//B/X'), [tail])
 
+    def test_attribute_expr(self):
+
+        tail = X(name="tail")
+        root = Object(A(B(tail)))
+
+        self.assertEqual(qpath(root, '//[@name() == "tail"]'), [tail])
+
+    def test_pass_globals(self):
+
+        tail = X()
+        root = Object(A(B(tail)))
+
+        self.assertEqual(qpath(root, '//[self is target]', dict(target=tail)), [tail])
+
 
 
 
