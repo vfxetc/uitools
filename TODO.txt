@@ -1,0 +1,33 @@
+- uitools.testing.qpath: XPath like querying for Qt
+
+    qpath(root_object, 'sgf.**.Dialog//QPushButton[text() ~ r'export']').click()
+    qpath(root, '//QWidget[visible and focus]')
+
+    Can start with QApplication.topLevelWidgets() if there is no root
+
+- decorators to skip tests unless there are certain Mayas:
+
+    @requires_maya(version='2011', gui=True)
+    class TestSomething(TestCase):
+        pass
+
+- mayatools.command_port
+    - open up a port in /var/tmp/maya_command_ports/{uuid}.sock
+    - be able to introspect them all
+    - be able to inject a query into every one of them simultaenously to
+      ask which one to take over, and then close those windows when done
+    - replace sys.stdout and sys.stderr with something that dispatches into
+      threading.local (and looks up threading parentage as well) so that output
+      can flow back through the command port
+    - monkeypatch threading.Thread.start to set the parent thread id, but
+      that isn't of complete help if we are using a different threading
+      mechanism
+
+- testing harness to look for a running Maya, hook into it (via a commandPort
+  that is opened by mayatools), ask the user if it is OK to take it over, and
+  then execute the test suite in it via nose.
+
+- easy access to shelf buttons, again xpath like. Not really nessesary though,
+  since it will be easier to grab dialogs and suck by directly calling the
+  entrypoints
+
