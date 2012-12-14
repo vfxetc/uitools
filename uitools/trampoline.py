@@ -35,7 +35,7 @@ except ImportError:
     import greenlet
 
 
-from qpath import qpath
+from qpath import qpath as _qpath
 
 
 if True:
@@ -143,8 +143,17 @@ def _raise(e):
     raise e
 
 
-def wait_for_qpath(root, query, timeout=None):
-    pass
+def qpath(root, query, timeout=5, repeat_delay=0.033, strict=False):
+    start_time = time.time()
+    while True:
+        res = _qpath(root, query)
+        if res:
+            return res
+        if (time.time() - start_time) >= timeout:
+            break
+        time.sleep(repeat_delay)
+    if strict:
+        raise RuntimeError('could not resolve qpath: %r' % query)
 
 
 def test():
