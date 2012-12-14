@@ -10,6 +10,7 @@ calling the function.
 import thread
 import Queue as queue
 import traceback
+import sys
 
 from .qt import QtCore, QtGui
 
@@ -22,45 +23,68 @@ _is_running = False
 
 if QtCore:
 
-    def _process_call_in_main_thread(res_queue, func, args, kwargs):
-
-        try:
-            res = func(*args, **kwargs)
-
-        except Exception as e:
-
-            if res_queue:
-                res_queue.put((False, e))
-            else:
-                sys.stderr.write('Uncaught exception in main thread.\n')
-                traceback.print_exc()
-
-        else:
-            if res_queue:
-                res_queue.put((True, res))
-
 
     class _MainThreadDispatcher(QtCore.QObject):
 
-        # Signature: return_queue (may be None), callable, args, kwargs
-        call = QtCore.pyqtSignal([object, object, object, object])
+        signal = QtCore.pyqtSignal([object, object, object, object])
 
         def __init__(self):
             super(_MainThreadDispatcher, self).__init__()
-            self.call.connect(_process_call_in_main_thread)
+            self.signal.connect(self.call)
+
+        # This must be marked as a slot for the queued signal dispatch
+        # to detect the proper thread to run on.
+        @QtCore.pyqtSlot(object, object, object, object)
+        def call(self, res_queue, func, args, kwargs):
+
+            try:
+                res = func(*args, **kwargs)
+
+            except Exception as e:
+
+                if res_queue:
+                    res_queue.put((False, e))
+                else:
+                    sys.stderr.write('Uncaught exception in main thread.\n')
+                    traceback.print_exc()
+
+            else:
+                if res_queue:
+                    res_queue.put((True, res))
 
 
+    # Create the dispatcher, and force it onto the main thread if an
+    # QApplication already exists. If not, when we need to handle it
+    # later...
     _main_thread_dispatcher = _MainThreadDispatcher()
-
+    _signal = _main_thread_dispatcher.signal.emit
+    _app = QtGui.QApplication.instance()
+    if _app is not None:
+        _main_thread_dispatcher.moveToThread(_app.thread())
 
     # This will run in the first cycle through the event loop, before
     # any of the following functions have had a chance to be called
-    # after the event loop starts. If this is called in the main event
-    # loop it will be processed immediately.
+    # after the event loop starts. If there is already a QApplication this
+    # will be called immediately. Otherwise, it will schedule a timer event
+    # to run in the first event loop which will then attach the dispatcher
+    # to the right thread.
     def _signal_when_running():
+
         global _is_running
         _is_running = True
-    _main_thread_dispatcher.call.emit(None, _signal_when_running, (), {})
+
+        # sys.__stdout__.write('# signal when running\n')
+
+        if _app is None:
+            _new_app = QtGui.QApplication.instance()
+            print _new_app, _new_app.thread()
+            _main_thread_dispatcher.moveToThread(_new_app.thread())
+
+    if _app is not None:
+        _signal(None, _signal_when_running, (), {})
+    else:
+        QtCore.QTimer.singleShot(0, _signal_when_running)
+
 
 
 
@@ -79,7 +103,7 @@ def defer_to_main_thread(func, *args, **kwargs):
 
     # Don't need to bother doing anything fancy since the signal will deal with
     # making sure that it runs on the main loop.
-    _main_thread_dispatcher.call.emit(None, func, args, kwargs)
+    _signal(None, func, args, kwargs)
 
 
 def main_thread_ident():
@@ -112,12 +136,12 @@ def call_in_main_thread(func, *args, **kwargs):
     If Qt is not running, it will call the function immediately.
 
     """
-    
+
     if not _is_running:
         return func(*args, **kwargs)
 
     res_queue = queue.Queue()
-    _main_thread_dispatcher.call.emit(res_queue, func, args, kwargs)
+    _signal(res_queue, func, args, kwargs)
     ok, res = res_queue.get()
     if ok:
         return res
