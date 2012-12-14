@@ -25,103 +25,147 @@ def test_something(self):
 
 import functools
 import time
-
+import sys
+import contextlib
 import greenlet
 
 from qpath import qpath
+
+
+if True:
+
+    start_time = time.time()
+
+    def debug(msg=None, *args, **kwargs):
+        if args:
+            msg = msg % args
+        debug.indent -= int(kwargs.get('dedent', 0))
+
+        if msg:
+            sys.stdout.write(('%8.3f ' % ((time.time() - start_time) * 1000)) + '  | ' * debug.indent + msg + '\n')
+            sys.stdout.flush()
+
+        debug.indent += int(kwargs.get('indent', 0))
+
+    debug.indent = 0
+
+    @contextlib.contextmanager
+    def indent(*args):
+        debug(*args, indent=True)
+        try:
+            yield
+        finally:
+            debug(dedent=True)
+
+else:
+
+    def debug(msg=None, *args, **kwargs):
+        pass
+
+    @contextlib.contextmanager
+    def indent(*args, **kwargs):
+        yield
 
 
 def decorate(call_in_main_thread):
     def _decorator(func):
 
         def _construct_and_start(args, kwargs):
-            print '_construct_and_start'
             g = greenlet.greenlet(func)
             res = g.switch(*args, **kwargs)
-            print '_construct_and_start DONE'
             return g, res
 
         def _decorated(*args, **kwargs):
-            print '_decorated'
+            debug('decorated', indent=True)
             g = None
             res = None
             while g is None or not g.dead:
 
-                print 'loop'
+                debug('top of loop')
 
                 exc = None
                 if res is not None:
-                    print 'calling', repr(res)
-                    try:
-                        res = res()
-                    except Exception as exc:
-                        pass
+                    with indent('calling %r', res):
+                        try:
+                            func, args, kwargs = res
+                            res = func(*args, **kwargs)
+                        except Exception as exc:
+                            pass
 
                 if g is None:
-                    g, res = call_in_main_thread(_construct_and_start, args, kwargs)
+                    with indent('starting greenlet'):
+                        g, res = call_in_main_thread(_construct_and_start, args, kwargs)
+
+                elif exc:
+                    with indent('raising in main thread: %r', exc):
+                        call_in_main_thread(g.throw, exc)
 
                 else:
-                    if exc:
-                        call_in_main_thread(g.throw, exc)
-                    else:
+                    with indent('sending to main thread: %r', res):
                         res = call_in_main_thread(g.switch, res)
 
+            debug(dedent=True)
             return res
 
         return _decorated
     return _decorator
 
 
+def bounce(func=None, *args, **kwargs):
+    debug('bounce to %r, %r, %r', func, args, kwargs)
+    if func:
+        res = greenlet.getcurrent().parent.switch(func, args, kwargs)
+    else:
+        greenlet.getcurrent().parent.switch(None)
+        res = None
+    debug('bounce landed with %r', res)
+    return res
+
+
+def sleep(seconds):
+    return bounce(time.sleep, seconds)
+
+
+def raise_(e):
+    bounce(_raise, e)
+
+def _raise(e):
+    raise e
+
+
 def wait_for_qpath(root, query, timeout=None):
     pass
 
 
-def bounce():
-    print 'bouncing up...'
-    greenlet.getcurrent().parent.switch(None)
-    print 'and back down'
-
-
-def sleep(seconds):
-    print 'going to sleep'
-    current = greenlet.getcurrent()
-    current.parent.switch(functools.partial(time.sleep, seconds))
-    print 'returned from sleep'
-
-
-
 if __name__ == '__main__':
-
-    import sys
-
-    class Flusher(object):
-        def __init__(self, obj):
-            self.obj = obj
-
-        def write(self, msg):
-            self.obj.write(msg)
-            self.obj.flush()
-
-    sys.stdout = Flusher(sys.stdout)
 
 
     def main_thread(func, *args, **kwargs):
-        print '>>> ENTER MAIN THREAD:', func, args, kwargs
         res = func(*args, **kwargs)
-        print '<<< LEAVE MAIN THREAD'
         return res
 
     @decorate(main_thread)
     def test(*args, **kwargs):
-        print 'func started with', args, kwargs
+        debug('1 - func started with %r, %r', args, kwargs)
         sleep(0.1)
+        debug('2')
         bounce()
+        debug('3')
+        
+        try:
+            raise_(ValueError('expected'))
+        except ValueError:
+            debug('4')
+        else:
+            debug("SHOULD NOT GET HERE!!!")
 
-    print 'Starting...'
+        return 'we finished'
+
+    debug('Starting...')
 
     res = test(1, 2, 3, key='value')
 
-    print 'Done.'
-    print 'Return value:', repr(res)
+    debug('Done.')
+    debug('Return value: %r', res)
 
 
