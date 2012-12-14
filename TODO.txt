@@ -31,3 +31,46 @@
   since it will be easier to grab dialogs and suck by directly calling the
   entrypoints
 
+
+---
+
+
+def wait_until_true(func, *args, **kwargs):
+    
+    timeout = kwargs.pop('timeout', None)
+    if kwargs:
+        raise ValueError('too many kwargs: %s' % ', '.join(sorted(kwargs)))
+
+    current = greenlet.getcurrent()
+    
+    _call_queue.put((current, _wait_until_true, (func, args, kwargs), None))
+    
+    return greenlet.getcurrent().parent.switch()
+
+
+# from uitools.test import requires_maya
+# from uitools.test import trampoline
+
+trampoline.decorator
+
+
+# @requires_maya(gui=True)
+def test_something(self):
+
+    # We are running in the main thread.
+    dialog = my_tool.run()
+
+    # Fall back out of the main event loop while we want for the following
+    # to become true.
+    button = trampoline.wait_for_qpath(dialog, '//QPushButton[@enabled]', timeout=5)[0]
+
+    # Do something else in the main thread.
+
+    # Wait a second while letting the event loop resume.
+    trampoline.sleep(1)
+
+
+
+
+
+
