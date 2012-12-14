@@ -27,7 +27,13 @@ import functools
 import time
 import sys
 import contextlib
-import greenlet
+
+try:
+    import greenlet
+except ImportError:
+    sys.path.append('/home/mboers/venv/lib/python2.6/site-packages')
+    import greenlet
+
 
 from qpath import qpath
 
@@ -42,8 +48,8 @@ if True:
         debug.indent -= int(kwargs.get('dedent', 0))
 
         if msg:
-            sys.stdout.write(('%8.3f ' % ((time.time() - start_time) * 1000)) + '  | ' * debug.indent + msg + '\n')
-            sys.stdout.flush()
+            sys.__stdout__.write(('%8.3f ' % ((time.time() - start_time) * 1000)) + '  | ' * debug.indent + msg + '\n')
+            sys.__stdout__.flush()
 
         debug.indent += int(kwargs.get('indent', 0))
 
@@ -67,47 +73,50 @@ else:
         yield
 
 
+def trampoline(call_in_main_thread, func, *args, **kwargs):
+
+    def _construct_and_start(args, kwargs):
+        g = greenlet.greenlet(func)
+        res = g.switch(*args, **kwargs)
+        return g, res
+
+    debug('trampoline', indent=True)
+    g = None
+    res = None
+    while g is None or not g.dead:
+
+        debug('top of loop')
+
+        exc = None
+        if res is not None:
+            with indent('calling %r', res):
+                try:
+                    func, args, kwargs = res
+                    res = func(*args, **kwargs)
+                except Exception as exc:
+                    pass
+
+        if g is None:
+            with indent('starting greenlet'):
+                g, res = call_in_main_thread(_construct_and_start, args, kwargs)
+
+        elif exc:
+            with indent('raising in main thread: %r', exc):
+                call_in_main_thread(g.throw, exc)
+
+        else:
+            with indent('sending to main thread: %r', res):
+                res = call_in_main_thread(g.switch, res)
+
+    debug(dedent=True)
+    return res
+
+
 def decorate(call_in_main_thread):
     def _decorator(func):
-
-        def _construct_and_start(args, kwargs):
-            g = greenlet.greenlet(func)
-            res = g.switch(*args, **kwargs)
-            return g, res
-
         @functools.wraps(func)
         def _decorated(*args, **kwargs):
-            debug('decorated', indent=True)
-            g = None
-            res = None
-            while g is None or not g.dead:
-
-                debug('top of loop')
-
-                exc = None
-                if res is not None:
-                    with indent('calling %r', res):
-                        try:
-                            func, args, kwargs = res
-                            res = func(*args, **kwargs)
-                        except Exception as exc:
-                            pass
-
-                if g is None:
-                    with indent('starting greenlet'):
-                        g, res = call_in_main_thread(_construct_and_start, args, kwargs)
-
-                elif exc:
-                    with indent('raising in main thread: %r', exc):
-                        call_in_main_thread(g.throw, exc)
-
-                else:
-                    with indent('sending to main thread: %r', res):
-                        res = call_in_main_thread(g.switch, res)
-
-            debug(dedent=True)
-            return res
-
+            return trampoline(call_in_main_thread, func, *args, **kwargs)
         return _decorated
     return _decorator
 
@@ -138,15 +147,14 @@ def wait_for_qpath(root, query, timeout=None):
     pass
 
 
-if __name__ == '__main__':
-
+def test():
 
     def main_thread(func, *args, **kwargs):
         res = func(*args, **kwargs)
         return res
 
     @decorate(main_thread)
-    def test(*args, **kwargs):
+    def tester(*args, **kwargs):
         debug('1 - func started with %r, %r', args, kwargs)
         sleep(0.1)
         debug('2')
@@ -164,9 +172,14 @@ if __name__ == '__main__':
 
     debug('Starting...')
 
-    res = test(1, 2, 3, key='value')
+    res = tester(1, 2, 3, key='value')
 
     debug('Done.')
     debug('Return value: %r', res)
+
+
+if __name__ == '__main__':
+    test()
+
 
 
