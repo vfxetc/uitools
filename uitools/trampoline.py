@@ -75,6 +75,7 @@ def decorate(call_in_main_thread):
             res = g.switch(*args, **kwargs)
             return g, res
 
+        @functools.wraps(func)
         def _decorated(*args, **kwargs):
             debug('decorated', indent=True)
             g = None
