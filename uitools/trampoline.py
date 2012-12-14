@@ -28,14 +28,9 @@ import time
 import sys
 import contextlib
 
-try:
-    import greenlet
-except ImportError:
-    sys.path.append('/home/mboers/venv/lib/python2.6/site-packages')
-    import greenlet
+import greenlet
 
-
-from qpath import qpath as _qpath
+from .qpath import qpath as _qpath
 
 
 if True:
