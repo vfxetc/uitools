@@ -40,10 +40,11 @@ if QtCore:
             try:
                 res = func(*args, **kwargs)
 
-            except Exception as e:
+            # Catch EVERYTHING, including KeyboardInterrupt and SystemExit.
+            except:
 
                 if res_queue:
-                    res_queue.put((False, e))
+                    res_queue.put((False, sys.exc_info()[1]))
                 else:
                     sys.stderr.write('Uncaught exception in main thread.\n')
                     traceback.print_exc()
