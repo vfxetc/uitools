@@ -28,7 +28,6 @@ import time
 import sys
 import contextlib
 
-import greenlet
 
 from .qpath import qpath as _qpath
 
@@ -69,6 +68,11 @@ else:
 
 
 def trampoline(call_in_main_thread, func, *args, **kwargs):
+
+    # Must be imported here so that the maya test bootstrap can insert into
+    # the sys.path
+    global greenlet
+    import greenlet
 
     def _construct_and_start(args, kwargs):
         g = greenlet.greenlet(func)
