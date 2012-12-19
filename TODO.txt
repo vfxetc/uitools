@@ -1,76 +1,18 @@
-- uitools.testing.qpath: XPath like querying for Qt
 
-    qpath(root_object, 'sgf.**.Dialog//QPushButton[text() ~ r'export']').click()
-    qpath(root, '//QWidget[visible and focus]')
+- `wait_until_true(func, *args, **kwargs, timeout=None)` for the trampoline.
 
-    Can start with QApplication.topLevelWidgets() if there is no root
+- figure out where "QMainWindowLayout::count: ?" is coming from Maya
 
-- decorators to skip tests unless there are certain Mayas:
+- convert trampoline into a class:
 
-    @requires_maya(version='2011', gui=True)
-    class TestSomething(TestCase):
-        pass
+  class Trampoline(object):
+    def __init__(self, func=None, call_in_main_thread=None)
 
-- mayatools.command_port
-    - open up a port in /var/tmp/maya_command_ports/{uuid}.sock
-    - be able to introspect them all
-    - be able to inject a query into every one of them simultaenously to
-      ask which one to take over, and then close those windows when done
-    - replace sys.stdout and sys.stderr with something that dispatches into
-      threading.local (and looks up threading parentage as well) so that output
-      can flow back through the command port
-    - monkeypatch threading.Thread.start to set the parent thread id, but
-      that isn't of complete help if we are using a different threading
-      mechanism
+  def trampoline(func=None, *args, **kwargs):
+    return Trampoline(func, *args, **kwargs)
 
-- testing harness to look for a running Maya, hook into it (via a commandPort
-  that is opened by mayatools), ask the user if it is OK to take it over, and
-  then execute the test suite in it via nose.
-
-- easy access to shelf buttons, again xpath like. Not really nessesary though,
-  since it will be easier to grab dialogs and suck by directly calling the
-  entrypoints
-
-
----
-
-
-def wait_until_true(func, *args, **kwargs):
-    
-    timeout = kwargs.pop('timeout', None)
-    if kwargs:
-        raise ValueError('too many kwargs: %s' % ', '.join(sorted(kwargs)))
-
-    current = greenlet.getcurrent()
-    
-    _call_queue.put((current, _wait_until_true, (func, args, kwargs), None))
-    
-    return greenlet.getcurrent().parent.switch()
-
-
-# from uitools.test import requires_maya
-# from uitools.test import trampoline
-
-trampoline.decorator
-
-
-# @requires_maya(gui=True)
-def test_something(self):
-
-    # We are running in the main thread.
-    dialog = my_tool.run()
-
-    # Fall back out of the main event loop while we want for the following
-    # to become true.
-    button = trampoline.wait_for_qpath(dialog, '//QPushButton[@enabled]', timeout=5)[0]
-
-    # Do something else in the main thread.
-
-    # Wait a second while letting the event loop resume.
-    trampoline.sleep(1)
-
-
-
-
+- integrate into the Maya event loop
+  - I think it is running its own set of events/loops on top of Qt, so it
+    isn't entirely cool to be jamming our own code into the Qt loop
 
 

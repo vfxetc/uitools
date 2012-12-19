@@ -5,20 +5,22 @@ main thread. However, special functions (provided by this module) will
 allow for that function to be interrupted, leave the main thread, wait
 for some action, and then resume the function back in the main thread.
 
-@trampoline.decorate(call_in_main_thread)
-def test_something(self):
+::
 
-    # We are running in the main thread.
-    dialog = my_tool.run()
+    @trampoline.decorate(threads.call_in_main_thread)
+    def test_something(self):
 
-    # Fall back out of the main event loop while we want for the following
-    # to become true.
-    button = trampoline.wait_for_qpath(dialog, '//QPushButton[@enabled]', timeout=5)[0]
+        # We are running in the main thread.
+        dialog = my_tool.run()
 
-    # Do something else in the main thread.
+        # Fall back out of the main event loop while we want for the following
+        # to become true.
+        button = trampoline.qpath(dialog, '//QPushButton[@enabled]', timeout=5)[0]
 
-    # Wait a second while letting the event loop resume.
-    trampoline.sleep(1)
+        # Do something else in the main thread.
+
+        # Wait a second while letting the event loop resume.
+        trampoline.sleep(1)
 
 
 """

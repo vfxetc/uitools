@@ -15,9 +15,8 @@ API Reference
     :maxdepth: 2
     
     threads
-
-
-
+    trampoline
+    qpath
 
 
 Indices and tables
