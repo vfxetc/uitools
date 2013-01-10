@@ -70,6 +70,26 @@ else:
 
 
 def trampoline(call_in_main_thread, func, *args, **kwargs):
+    """Call a function in the main thread, allowing it to bounce into the background.
+
+    When called via ``trampoline`` a function's main body will execute in the
+    main thread. However, it is allowed to use :func:`bounce` (and functions
+    which use :func:`bounce`) to effectively run synchronous tasks in the
+    background while giving the main thread a chance to perform other tasks.
+
+    ::
+    
+        def my_func():
+            print 'Going to sleep (without locking up the main thread)...'
+            bounce(sleep, 10)
+            print 'Back!'
+
+    :param call_in_main_thread: Function to call another function in the main thread.
+    :param func: The function to run.
+    :param *args: Passed to ``func``.
+    :param **kwargs: Passed to ``func``.
+
+    """
 
     # Must be imported here so that the maya test bootstrap can insert into
     # the sys.path
@@ -114,6 +134,8 @@ def trampoline(call_in_main_thread, func, *args, **kwargs):
 
 
 def decorate(call_in_main_thread):
+    """Decorate a function so that its body runs in the main thread as
+    if called via :func:`trampoline`."""
     def _decorator(func):
         @functools.wraps(func)
         def _decorated(*args, **kwargs):
@@ -123,6 +145,17 @@ def decorate(call_in_main_thread):
 
 
 def bounce(func=None, *args, **kwargs):
+    """Perform an effectively sychnorous call in the background from a
+    trampolined function.
+
+    :param func: The function to call.
+    :param *args: Passed to ``func``.
+    :param **kwargs: Passed to ``func``.
+    :returns: The return value of ``func``.
+    :raises: Anything that ``func`` raises.
+
+    """
+
     debug('bounce to %r, %r, %r', func, args, kwargs)
     if func:
         res = greenlet.getcurrent().parent.switch(func, args, kwargs)
@@ -134,14 +167,8 @@ def bounce(func=None, *args, **kwargs):
 
 
 def sleep(seconds):
+    """Sleep in the background."""
     return bounce(time.sleep, seconds)
-
-
-def raise_(e):
-    bounce(_raise, e)
-
-def _raise(e):
-    raise e
 
 
 def qpath(root, query, timeout=5, repeat_delay=0.033, strict=False):
