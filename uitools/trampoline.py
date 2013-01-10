@@ -171,6 +171,14 @@ def sleep(seconds):
     return bounce(time.sleep, seconds)
 
 
+def raise_(e):
+    bounce(_raise, e)
+
+
+def _raise(e):
+    raise e
+
+
 def qpath(root, query, timeout=5, repeat_delay=0.033, strict=False):
     start_time = time.time()
     while True:

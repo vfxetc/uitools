@@ -22,13 +22,13 @@ Axis specifiers:
 
 """
 
-import itertools
 import re
 import fnmatch
 
 
 _query_re = re.compile(r'/?(/|[^/]*)')
 _axis_re = re.compile(r'^\s*(.*?)\s*(?:\[(.+)\])?\s*$')
+
 
 def qpath(root, query, globals=None):
     """Return a list of results by applying a query string to a context.

@@ -1,4 +1,4 @@
-from .qt import *
+from .qt import QtGui
 
 
 class CollapseToggle(QtGui.QCheckBox):

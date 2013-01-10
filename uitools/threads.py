@@ -19,7 +19,6 @@ thread if called from the main thread.
 
 from __future__ import absolute_import
 
-import thread
 import Queue as queue
 import traceback
 import sys

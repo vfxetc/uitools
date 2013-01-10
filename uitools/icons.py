@@ -1,4 +1,6 @@
-from PyQt4 import QtGui
+import os
+
+from .qt import Qt, QtGui
 
 
 # THIS IS NOT IN A USABLE STATE!

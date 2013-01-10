@@ -1,4 +1,4 @@
-from .qt import *
+from .qt import QtCore, QtGui
 
 
 class ComboBox(QtGui.QComboBox):
