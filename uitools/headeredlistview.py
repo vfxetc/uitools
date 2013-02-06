@@ -1,8 +1,10 @@
 from .qt import Qt, QtGui, QtCore
+from . import roles
 
 
-HEADER_ROLE = Qt.UserRole + 1
+HeaderDisplayRole = roles.get_role('header')
 HEADER_HEIGHT = 20
+
 
 class ListView(QtGui.QListView):
     
@@ -82,7 +84,7 @@ class Delegate(QtGui.QStyledItemDelegate):
     
     @staticmethod
     def _indexHeader(index):
-        header = index.data(HEADER_ROLE)
+        header = index.data(HeaderDisplayRole)
         return str(header.toString()) if header.isValid() else None
 
     @classmethod
@@ -126,7 +128,7 @@ if __name__ == '__main__':
         items.append(item)
 
         item.setText(c)
-        item.setData('Uppercase' if (c.upper() == c) else 'Lowercase', HEADER_ROLE)
+        item.setData('Uppercase' if (c.upper() == c) else 'Lowercase', HeaderDisplayRole)
 
         model.setItem(i, 0, item)
 
