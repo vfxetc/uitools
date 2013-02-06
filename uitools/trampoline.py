@@ -32,6 +32,7 @@ import contextlib
 
 
 from .qpath import qpath as _qpath
+from .threads import call_in_main_thread
 
 
 if True:

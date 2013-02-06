@@ -1,4 +1,4 @@
-from PyQt4 import QtCore, QtGui
+from .qt import QtCore, QtGui
 
 
 class _ModuleProxy(object):
@@ -20,5 +20,5 @@ class _ModuleProxy(object):
 Q = _ModuleProxy(
     (QtGui, lambda name: ('Q' + name, )),
     (QtCore, lambda name: ('Q' + name, )),
-    (QtCore.Qt, lambda name: (name, )),
+    (QtCore.Qt, lambda name: (name, 'Q' + name)),
 )

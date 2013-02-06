@@ -12,9 +12,6 @@ Another large benefit of these functions is that they are re-rentrant, unlike
 the functions provided in either Maya or Nuke which will lock up the main
 thread if called from the main thread.
 
-.. warning:: Maya does occasionally output "QMainWindowLayout::count: ?" when
-    using these functions, and I haven't determined why.
-
 """
 
 from __future__ import absolute_import

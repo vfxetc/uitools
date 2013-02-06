@@ -1,4 +1,4 @@
-from PyQt4 import QtGui
+from .qt import QtGui
 
 def _box(layout, *args):
     for arg in args:
