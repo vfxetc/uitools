@@ -115,6 +115,18 @@ class Delegate(QtGui.QStyledItemDelegate):
                 size.setHeight(HEADER_HEIGHT)
         return size
 
+    def paint(self, painter, options, index):
+                
+        super(Delegate, self).paint(painter, options, index)
+        
+        # Column view arrow when there are children.
+        has_children = (options.state & QtGui.QStyle.State_Children or
+            index.model().hasChildren(index))
+        if has_children:
+            options.rect.setLeft(options.rect.right() - 12)
+            style = QtGui.QApplication.style()
+            style.drawPrimitive(QtGui.QStyle.PE_IndicatorColumnViewArrow, options, painter)
+
 
 if __name__ == '__main__':
 
