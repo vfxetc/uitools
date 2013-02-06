@@ -109,7 +109,10 @@ class Delegate(QtGui.QStyledItemDelegate):
         size = super(Delegate, self).sizeHint(option, index).expandedTo(
             QtCore.QSize(1, 20))
         if self._headerToDraw(index):
-            size.setHeight(size.height() + HEADER_HEIGHT)
+            if index.data(Qt.DisplayRole).isValid():
+                size.setHeight(size.height() + HEADER_HEIGHT)
+            else:
+                size.setHeight(HEADER_HEIGHT)
         return size
 
 
