@@ -6,11 +6,17 @@ HeaderDisplayRole = roles.get_role('header')
 HEADER_HEIGHT = 20
 
 
-class ListView(QtGui.QListView):
+class HeaderedListView(QtGui.QListView):
     
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('verticalScrollMode', self.ScrollPerPixel)
-        super(ListView, self).__init__(*args, **kwargs)
+        super(HeaderedListView, self).__init__(*args, **kwargs)
+
+        self.restoreAfterInitialize()
+
+    def restoreAfterInitialize(self):
+        self._delegate = Delegate()
+        self.setItemDelegate(self._delegate)
 
     # Need to force a repaint on the top of the list for the headers.
     # Repaint twice the height of the headers plus a little padding for
@@ -18,16 +24,16 @@ class ListView(QtGui.QListView):
     # be revealed by them moving.
 
     def resizeEvent(self, e):
-        super(ListView, self).resizeEvent(e)
+        super(HeaderedListView, self).resizeEvent(e)
         self.repaint(0, 0, self.width(), 2 * HEADER_HEIGHT + 2)
 
     def scrollContentsBy(self, x, y):
-        super(ListView, self).scrollContentsBy(x, y)
+        super(HeaderedListView, self).scrollContentsBy(x, y)
         self.repaint(0, 0, self.width(), 2 * HEADER_HEIGHT + 2 + abs(y))
 
     def paintEvent(self, e):
 
-        super(ListView, self).paintEvent(e)
+        super(HeaderedListView, self).paintEvent(e)
 
         painter = QtGui.QStylePainter(self.viewport())
         font = painter.font()
@@ -52,7 +58,7 @@ class ListView(QtGui.QListView):
             if not header:
                 continue
 
-            rect = super(ListView, self).visualRect(child)
+            rect = super(HeaderedListView, self).visualRect(child)
             rect.setHeight(HEADER_HEIGHT)
 
             headers.append((rect, header))
@@ -75,10 +81,11 @@ class ListView(QtGui.QListView):
 
 
     def visualRect(self, index):
-        rect = super(ListView, self).visualRect(index)
+        rect = super(HeaderedListView, self).visualRect(index)
         if Delegate._headerToDraw(index):
             rect.setTop(rect.top() + HEADER_HEIGHT)
         return rect
+
 
 class Delegate(QtGui.QStyledItemDelegate):
     
@@ -99,7 +106,8 @@ class Delegate(QtGui.QStyledItemDelegate):
             return this_header
 
     def sizeHint(self, option, index):
-        size = super(Delegate, self).sizeHint(option, index)
+        size = super(Delegate, self).sizeHint(option, index).expandedTo(
+            QtCore.QSize(1, 20))
         if self._headerToDraw(index):
             size.setHeight(size.height() + HEADER_HEIGHT)
         return size
@@ -112,7 +120,7 @@ if __name__ == '__main__':
     dialog = QtGui.QDialog()
     dialog.setLayout(QtGui.QVBoxLayout())
 
-    widget = ListView()
+    widget = HeaderedListView()
     dialog.layout().addWidget(widget)
 
     delegate = Delegate()
