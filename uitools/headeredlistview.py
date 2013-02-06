@@ -1,13 +1,10 @@
-from .qt import Qt
-from .q import Q
+from .qt import Qt, QtGui, QtCore
 
 
-app = Q.Application([])
-
-HEADER_ROLE = Q.UserRole + 1
+HEADER_ROLE = Qt.UserRole + 1
 HEADER_HEIGHT = 20
 
-class ListView(Q.ListView):
+class ListView(QtGui.QListView):
     
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('verticalScrollMode', self.ScrollPerPixel)
@@ -30,14 +27,14 @@ class ListView(Q.ListView):
 
         super(ListView, self).paintEvent(e)
 
-        painter = Q.StylePainter(self.viewport())
+        painter = QtGui.QStylePainter(self.viewport())
         font = painter.font()
         font.setPointSize(10)
         painter.setFont(font)
 
-        option = Q.StyleOptionHeader()
+        option = QtGui.QStyleOptionHeader()
         option.initFrom(self.viewport())
-        option.state &= ~Q.Style.State_HasFocus
+        option.state &= ~QtGui.QStyle.State_HasFocus
 
         headers = []
 
@@ -72,7 +69,7 @@ class ListView(Q.ListView):
                 continue
             option.text = header
             option.rect = rect.adjusted(0, 0, 1, 0)
-            painter.drawControl(Q.Style.CE_Header, option)
+            painter.drawControl(QtGui.QStyle.CE_Header, option)
 
 
     def visualRect(self, index):
@@ -81,7 +78,7 @@ class ListView(Q.ListView):
             rect.setTop(rect.top() + HEADER_HEIGHT)
         return rect
 
-class Delegate(Q.StyledItemDelegate):
+class Delegate(QtGui.QStyledItemDelegate):
     
     @staticmethod
     def _indexHeader(index):
@@ -106,28 +103,32 @@ class Delegate(Q.StyledItemDelegate):
         return size
 
 
-dialog = Q.Dialog()
-dialog.setLayout(Q.VBoxLayout())
+if __name__ == '__main__':
 
-widget = ListView()
-dialog.layout().addWidget(widget)
+    app = QtGui.QApplication([])
 
-delegate = Delegate()
-widget.setItemDelegate(delegate)
+    dialog = QtGui.QDialog()
+    dialog.setLayout(QtGui.QVBoxLayout())
 
-model = Q.StandardItemModel(5, 1)
-widget.setModel(model)
+    widget = ListView()
+    dialog.layout().addWidget(widget)
 
-items = []
+    delegate = Delegate()
+    widget.setItemDelegate(delegate)
 
-for i, c in enumerate('ABcdEFGHIjkl' * 10):
-    item = Q.StandardItem()
-    items.append(item)
+    model = QtGui.QStandardItemModel(5, 1)
+    widget.setModel(model)
 
-    item.setText(c)
-    item.setData('Uppercase' if (c.upper() == c) else 'Lowercase', HEADER_ROLE)
+    items = []
 
-    model.setItem(i, 0, item)
+    for i, c in enumerate('ABcdEFGHIjkl' * 10):
+        item = QtGui.QStandardItem()
+        items.append(item)
 
-dialog.show()
-app.exec_()
+        item.setText(c)
+        item.setData('Uppercase' if (c.upper() == c) else 'Lowercase', HEADER_ROLE)
+
+        model.setItem(i, 0, item)
+
+    dialog.show()
+    app.exec_()
