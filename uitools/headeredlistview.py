@@ -17,7 +17,7 @@ class HeaderedListView(QtGui.QListView):
     def restoreAfterInitialize(self):
         self._delegate = Delegate()
         self.setItemDelegate(self._delegate)
-        self.setMinimumWidth(150)
+        self.setMinimumWidth(120)
 
     # Need to force a repaint on the top of the list for the headers.
     # Repaint twice the height of the headers plus a little padding for
