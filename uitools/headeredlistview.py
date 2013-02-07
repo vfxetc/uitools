@@ -17,6 +17,7 @@ class HeaderedListView(QtGui.QListView):
     def restoreAfterInitialize(self):
         self._delegate = Delegate()
         self.setItemDelegate(self._delegate)
+        self.setMinimumWidth(150)
 
     # Need to force a repaint on the top of the list for the headers.
     # Repaint twice the height of the headers plus a little padding for
@@ -117,6 +118,10 @@ class Delegate(QtGui.QStyledItemDelegate):
 
     def paint(self, painter, options, index):
                 
+        style = QtGui.QApplication.style()
+        style.drawPrimitive(QtGui.QStyle.PE_PanelItemViewRow, options, painter)
+
+        options.rect.adjust(2, 0, 0, 0)
         super(Delegate, self).paint(painter, options, index)
         
         # Column view arrow when there are children.
@@ -124,7 +129,6 @@ class Delegate(QtGui.QStyledItemDelegate):
             index.model().hasChildren(index))
         if has_children:
             options.rect.setLeft(options.rect.right() - 12)
-            style = QtGui.QApplication.style()
             style.drawPrimitive(QtGui.QStyle.PE_IndicatorColumnViewArrow, options, painter)
 
 
