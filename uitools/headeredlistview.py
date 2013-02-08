@@ -17,6 +17,8 @@ class HeaderedListView(QtGui.QListView):
     def restoreAfterInitialize(self):
         self._delegate = Delegate()
         self.setItemDelegate(self._delegate)
+
+        # Only marginally larger than the default 100.
         self.setMinimumWidth(120)
 
     # Need to force a repaint on the top of the list for the headers.
@@ -44,7 +46,8 @@ class HeaderedListView(QtGui.QListView):
         option = QtGui.QStyleOptionHeader()
         option.initFrom(self.viewport())
         option.state &= ~QtGui.QStyle.State_HasFocus
-
+        option.textAlignment = Qt.AlignCenter
+        
         headers = []
 
         # Collect the headers.
