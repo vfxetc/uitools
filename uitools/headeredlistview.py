@@ -21,18 +21,14 @@ class HeaderedListView(QtGui.QListView):
         # Only marginally larger than the default 100.
         self.setMinimumWidth(120)
 
-    # Need to force a repaint on the top of the list for the headers.
-    # Repaint twice the height of the headers plus a little padding for
-    # the top two headers (which may move) and the little bit that may
-    # be revealed by them moving.
-
-    def resizeEvent(self, e):
-        super(HeaderedListView, self).resizeEvent(e)
-        self.repaint(0, 0, self.width(), 2 * HEADER_HEIGHT + 2)
-
     def scrollContentsBy(self, x, y):
         super(HeaderedListView, self).scrollContentsBy(x, y)
-        self.repaint(0, 0, self.width(), 2 * HEADER_HEIGHT + 2 + abs(y))
+        
+        # Need to force a repaint on the top of the list for the headers.
+        # Repaint twice the height of the headers plus a little padding for
+        # the top two headers (which may move) and the little bit that may
+        # be revealed by them moving.
+        self.viewport().update(0, 0, self.width(), 2 * HEADER_HEIGHT + 2 + abs(y))
 
     def paintEvent(self, e):
 
