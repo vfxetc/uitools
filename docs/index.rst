@@ -3,6 +3,10 @@
 uitools
 =======
 
+.. image:: https://secure.travis-ci.org/westernx/uitools.png
+    :alt: Test Status
+    :target: http://travis-ci.org/westernx/uitools
+
 .. todo:: Overview.
 
 
