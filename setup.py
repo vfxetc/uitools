@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup, find_packages
 
 setup(
     name='uitools',
@@ -6,7 +6,7 @@ setup(
     description='Collection of general tools and utilities for working with and testing Qt tools.',
     url='https://github.com/westernx/uitools',
     
-    packages=['uitools'],
+    packages=find_packages(exclude=['build*', 'tests*']),
     
     author='Mike Boers',
     author_email='uitools@mikeboers.com',
