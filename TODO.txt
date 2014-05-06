@@ -1,3 +1,5 @@
+- Should we NOT even out so much of the PyQT4/PySide API, as it is not
+  very nice behaviour?
 
 - `wait_until_true(func, *args, **kwargs, timeout=None)` for the trampoline.
 
