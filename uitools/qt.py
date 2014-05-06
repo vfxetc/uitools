@@ -11,8 +11,11 @@ __all__ = ['Qt', 'QtCore', 'QtGui']
 try:
     from PyQt4 import QtCore, QtGui
 except ImportError:
-    for name in __all__:
-        globals().setdefault(name, None)
-else:
-    Qt = QtCore.Qt
+    try:
+        from PySide import QtCore, QtGui
+    except ImportError:
+        for name in __all__:
+            globals().setdefault(name, None)
 
+
+Qt = QtCore.Qt if QtCore else None
