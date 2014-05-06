@@ -1,18 +1,18 @@
-"""Convenience to import Qt if it is availible, otherwise provide stubs.
+"""Wrapping the differences between PyQt4 and PySide."""
 
-Normally I wouldn't bother with something like this, but due to the
-testing contexts that we often run we may import stuff from uitools that
-does not have Qt avilaible.
-
-"""
+import sys
 
 __all__ = ['Qt', 'QtCore', 'QtGui']
 
 try:
-    from PyQt4 import QtCore, QtGui
+    import PySide
+    from PySide import QtCore, QtGui
+    sys.modules.setdefault('PyQt4', PySide)
 except ImportError:
     try:
-        from PySide import QtCore, QtGui
+        import PyQt4
+        from PyQt4 import QtCore, QtGui
+        sys.modules.setdefault('PySide', PySide)
     except ImportError:
         for name in __all__:
             globals().setdefault(name, None)
