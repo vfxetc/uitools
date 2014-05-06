@@ -19,7 +19,7 @@ except ImportError:
 
         import PyQt4
         from PyQt4 import QtCore, QtGui
-        sys.modules.setdefault('PySide', PySide)
+        sys.modules.setdefault('PySide', PyQt4)
         
         # Even out some of the API.
         QtCore.Signal = QtCore.pyqtSignal
