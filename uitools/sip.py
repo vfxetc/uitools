@@ -1,10 +1,14 @@
 """Wrapping the differences between PyQt4 and PySide."""
 
+
+try:
+    import sip
+except ImportError:
+    sip = None
+
 try:
     import shiboken
-    sip = None
 except ImportError:
-    import sip
     shiboken = None
 
 from .qt import QtGui, QtCore
@@ -23,6 +27,9 @@ def wrapinstance(ptr, base=None):
         return None
     ptr = long(ptr)
 
+    if sip is not None:
+        return sip.wrapinstance(ptr, base or QtCore.QObject)
+
     if shiboken is not None:
         if base is None:
 
@@ -38,11 +45,3 @@ def wrapinstance(ptr, base=None):
                     QtGui.QWidget)
 
         return shiboken.wrapInstance(ptr, base)
-
-    elif sip is not None:
-        return sip.wrapinstance(ptr, base or QtCore.QObject)
-    
-    else:
-        return None
-
-
