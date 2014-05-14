@@ -1,5 +1,7 @@
 """Wrapping the differences between PyQt4 and PySide."""
 
+from __future__ import absolute_import
+
 
 try:
     import sip
