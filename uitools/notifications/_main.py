@@ -4,6 +4,8 @@ import sys
 
 from .core import *
 
+from metatools.apps.runtime import initialize, poll_event_loop
+
 
 def main_bundle():
 
@@ -38,10 +40,12 @@ def main():
     args = parser.parse_args()
 
 
+    print 'here1'
+    
     if IS_MACOS:
-        from .darwin import _setup
-        _setup()
+        initialize(standalone=not (args.loop or args.qt))
 
+    print 'here2'
 
     if args.qt:
 
@@ -60,51 +64,29 @@ def main():
 
     # Need to keep this around (for the libnotify handle).
     note = Notification('Test', 'This is a test.', subtitle='Subtitle')
+    print note
     note.send()
-
-
-    if IS_MACOS and not (args.loop or args.qt):
-        from .darwin import _catch_startup_events
-        _catch_startup_events()
-        exit()
 
 
     if args.loop:
 
-        if IS_MACOS:
-            run_loop = NS.RunLoop.currentRunLoop()
-            def run_loop_once(timeout=0):
-                # We can either give an instanteous beforeDate and sleep ourselves,
-                # or we can give it a positive time.
-                until = NS.Date.dateWithTimeIntervalSinceNow_(timeout) # time from now in seconds
-                run_loop.runMode_beforeDate_(NS.DefaultRunLoopMode, until)
-
-        if IS_LINUX:
-            glib_loop = QLib.MainLoop()
-            if args.qt:
-                def run_loop_once():
-                    # This must be added every time.
-                    GLib.idle_add(glib_loop.quit)
-                    glib_loop.run()
-            else:
-                glib_loop.run()
+        # if IS_LINUX:
+        #     glib_loop = QLib.MainLoop()
+        #     if args.qt:
+        #         def poll_event_loop():
+        #             # This must be added every time.
+        #             GLib.idle_add(glib_loop.quit)
+        #             glib_loop.run()
+        #     else:
+        #         glib_loop.run()
 
         if args.qt:
             # Connect the OS loop to the Qt loop, and start it up.
-            qt_timer.timeout.connect(run_loop_once)
+            qt_timer.timeout.connect(poll_event_loop)
             qt_app.exec_()
 
         else:
-
-            # If you need applicationDidFinishLaunching, then you must run
-            # the real loop (or, perhaps, the fake one above, followed by
-            # the real loop).
-            ns_app.run()
-
-            # Here is our manual loop.
-            while True:
-                print 'run_loop_once'
-                run_loop_once(1)
+            run_event_loop()
 
 
 if __name__ == '__main__':

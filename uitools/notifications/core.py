@@ -16,16 +16,11 @@ class NotifierFailed(RuntimeError):
 
 try:
     if IS_MACOS:
-        from .darwin import *
+        from .darwin import Notification
     elif IS_LINUX:
-        from .linux import *
+        from .linux import Notification
 except ImportError:
     from .fallback import Notification
-
-
-
-
-
 
 
 def _on_action(*args, **kwargs):
