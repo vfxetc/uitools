@@ -12,6 +12,16 @@ setup(
     author_email='uitools@mikeboers.com',
     license='BSD-3',
     
+    metatools_apps=[{
+        'name': 'Python_Notifications',
+        'identifier': 'com.westernx.uitools.notifications',
+        'target_type': 'entrypoint',
+        'target': 'uitools.notifications._main:main_bundle',
+        'use_compiled_bootstrap': True,
+        'python_path': ['/home/mboers/dev/uitools'],
+        'bundle_path': 'build/lib/uitools/notifications/darwin.app',
+    }],
+
     classifiers=[
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',

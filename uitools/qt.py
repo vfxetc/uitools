@@ -2,7 +2,10 @@
 
 import sys
 
+from .utils import ModuleProxy
+
 __all__ = ['Qt', 'QtCore', 'QtGui']
+
 
 try:
     import PyQt4
@@ -17,3 +20,5 @@ except ImportError:
 
 # For the convenience of our own tools.
 Qt = QtCore.Qt if QtCore else None
+
+Q = ModuleProxy(('', 'Q', 'Qt'), (Qt, QtCore, QtGui))

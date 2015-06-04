@@ -1,3 +1,10 @@
+- unified notification interface for common things between the best on both
+  platforms
+- specific API for each platform
+
+- icons for notifications:
+    Linux: http://stackoverflow.com/questions/3894763/what-icons-are-available-to-use-when-displaying-a-notification-with-libnotify?rq=1
+
 - Should we NOT even out so much of the PyQT4/PySide API, as it is not
   very nice behaviour?
 
