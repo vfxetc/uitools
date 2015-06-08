@@ -1,3 +1,5 @@
+import re
+import os
 import tempfile
 from subprocess import check_call
 
@@ -23,7 +25,7 @@ class Notification(object):
             os.close(fd)
         return self._tempfile
 
-    def send_via_fallback(self):
+    def send(self):
 
         if IS_LINUX:
             argv = ['notify-send']
@@ -37,8 +39,8 @@ class Notification(object):
 
         if IS_MACOS:
             argv = ['terminal-notifier',
-                '-title', title,
-                '-message', message,
+                '-title', self.title,
+                '-message', self.message,
                 '-open', 'file://' + self.get_tempfile_path(),
             ]
             try:
@@ -48,8 +50,8 @@ class Notification(object):
 
             # AppleScript works since 10.9.
             argv = ['osascript', '-e', 'display notification "%s" with title "%s"' % (
-                message.replace('"', '\\"'),
-                title.replace('"', '\\"'),
+                self.message.replace('"', '\\"'),
+                self.title.replace('"', '\\"'),
             )]
             try:
                 return check_call(argv)
@@ -58,8 +60,8 @@ class Notification(object):
         
             argv = ['growlnotify',
                 '--name', 'Shotgun Action Dispatcher',
-                '--title', title,
-                '--message', message
+                '--title', self.title,
+                '--message', self.message
             ]
             if self.sticky:
                 argv.append('-s')

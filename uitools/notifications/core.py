@@ -19,7 +19,9 @@ try:
         from .darwin import Notification
     elif IS_LINUX:
         from .linux import Notification
-except ImportError:
+except ImportError as e:
+    import warnings
+    warnings.warn(str(e))
     from .fallback import Notification
 
 

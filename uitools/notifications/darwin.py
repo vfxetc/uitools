@@ -1,10 +1,58 @@
-from metatools.apps.runtime import NS, replace_bundle_id, Delegate
+
+from metatools.apps.runtime import NS, replace_bundle_id
+
+
+_delegate = None
+def get_delegate():
+
+    global _delegate
+    if _delegate:
+        return _delegate
+
+    class WXNotificationDelegate(NS.Object):
+
+        def _init(self):
+
+            self._center = NS.UserNotificationCenter.defaultUserNotificationCenter()
+            if not self._center:
+                replace_bundle_id('com.westernx.uitools.notifications',
+                    reason='to send notifications')
+                self._center = NS.UserNotificationCenter.defaultUserNotificationCenter()
+            if not self._center:
+                raise RuntimeError('no notification center; is this not in a bundle?')
+
+            self._next = self._center.delegate()
+            self._center.setDelegate_(self)
+
+        def userNotificationCenter_didDeliverNotification_(self, center, notification):
+            pass
+            # print "userNotificationCenter_didDeliverNotification_"
+
+        def userNotificationCenter_didActivateNotification_(self, center, notification):
+            pass
+            # print "userNotificationCenter_didActivateNotification_"
+            # meta = notification.userInfo()
+            # if 'uitools' in meta:
+            #     print meta['uitools']
+            
+            # If you want to remove it:
+            center.removeDeliveredNotification_(notification)
+
+        def userNotificationCenter_shouldPresentNotification_(self, center, note):
+            # print "userNotificationCenter_shouldPresentNotification_"
+            return True;
+
+    _delegate = WXNotificationDelegate.alloc().init()
+    _delegate._init()
+    return _delegate
 
 
 class Notification(object):
 
-    def __init__(self, title, message, subtitle=None):
+    def __init__(self, title=None, message=None, subtitle=None):
 
+        if not (title or message):
+            raise ValueError('please supply title or message')
         self.title = title
         self.subtitle = subtitle
         self.message = message
@@ -13,24 +61,22 @@ class Notification(object):
 
     def send(self):
 
-        center = NS.UserNotificationCenter.defaultUserNotificationCenter()
+        center = get_delegate()._center
         if not center:
-            # If we do this, then we can't respond to our own events!
-            replace_bundle_id()
-            center = NS.UserNotificationCenter.defaultUserNotificationCenter()
-        if not center:
-            raise RuntimError('no notification center; is this not in a bundle?')
+            raise RuntimeError('WXNotificationDelegate._center is None')
 
         notification = NS.UserNotification.alloc().init()
 
-        notification.setTitle_(str(self.title))
+        if self.title:
+            notification.setTitle_(str(self.title))
         if self.subtitle:
             notification.setSubtitle_(str(self.subtitle))
-        notification.setInformativeText_(str(self.message))
+        if self.message:
+            notification.setInformativeText_(str(self.message))
 
-        notification.setUserInfo_({'uitools': 'this is where args and kwargs go'})
+        # notification.setUserInfo_({'uitools': 'this is where args and kwargs go in the future'})
 
-        if True: # More things we can do in the future:
+        if False: # More things we can do in the future:
 
             # This only works if _showsButtons (below) is not used.
             # If active, set*ButtonTitle does nothing.
@@ -63,6 +109,5 @@ class Notification(object):
                 image2 = NS.Image.alloc().initWithContentsOfFile_('/home/mboers/Documents/textures/ash_uvgrid01.jpg')
                 notification.setContentImage_(image2)
 
-        center.setDelegate_(Delegate.instance())
         center.scheduleNotification_(notification)
 

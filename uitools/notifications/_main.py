@@ -4,7 +4,7 @@ import sys
 
 from .core import *
 
-from metatools.apps.runtime import initialize, poll_event_loop
+from metatools.apps.runtime import initialize, poll_event_loop, run_event_loop
 
 
 def main_bundle():
@@ -28,6 +28,10 @@ def main_bundle():
     main()
 
 
+# Target of the notification app.
+def noop():
+    pass
+
 
 def main():
 
@@ -39,13 +43,8 @@ def main():
     parser.add_argument('--qt', action='store_true')
     args = parser.parse_args()
 
-
-    print 'here1'
-    
     if IS_MACOS:
         initialize(standalone=not (args.loop or args.qt))
-
-    print 'here2'
 
     if args.qt:
 
