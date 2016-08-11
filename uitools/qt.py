@@ -13,9 +13,15 @@ try:
 
 except ImportError:
 
-    # For our tests, so they don't suffer import errors.
-    for name in __all__:
-        globals().setdefault(name, None)
+    try:
+        import PySide
+        from PySide import QtCore, QtGui
+    
+    except ImportError:
+
+        # For our tests, so they don't suffer import errors.
+        for name in __all__:
+            globals().setdefault(name, None)
 
 
 # For the convenience of our own tools.
