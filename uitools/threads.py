@@ -28,7 +28,8 @@ if QtCore:
 
     class _Event(QtCore.QEvent):
 
-        _type = QtCore.QEvent.registerEventType()
+        _type_int = QtCore.QEvent.registerEventType()
+        _type = QtCore.QEvent.Type(_type_int) # Mostly for PySide.
 
         def __init__(self, res_queue, func, args, kwargs):
             super(_Event, self).__init__(self._type)
