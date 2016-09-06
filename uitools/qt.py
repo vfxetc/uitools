@@ -85,7 +85,7 @@ if not provider:
         # Go looking for classes that we would want to transform.
         for cls_name, func in [
             ('QString', lambda x: unicode(x)),
-            ('QVariant', lambda x: qt2py(x.toPyObject()))
+            ('QVariant', lambda x: qt2py(x.toPyObject()) if x.isValid() else None)
         ]:
             if hasattr(QtCore, cls_name):
                 _qt2py_transforms.append((getattr(QtCore, cls_name), func))

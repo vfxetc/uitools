@@ -1,4 +1,4 @@
-from .qt import Qt, QtGui, QtCore
+from .qt import Qt, QtGui, QtCore, qt2py
 from . import roles
 
 
@@ -92,7 +92,7 @@ class Delegate(QtGui.QStyledItemDelegate):
     @staticmethod
     def _indexHeader(index):
         header = index.data(HeaderDisplayRole)
-        return str(header.toString()) if header.isValid() else None
+        return qt2py(header)
 
     @classmethod
     def _headerToDraw(cls, index):
@@ -109,7 +109,7 @@ class Delegate(QtGui.QStyledItemDelegate):
         size = super(Delegate, self).sizeHint(option, index).expandedTo(
             QtCore.QSize(1, 20))
         if self._headerToDraw(index):
-            if index.data(Qt.DisplayRole).isValid():
+            if index.data(Qt.DisplayRole) is not None:
                 size.setHeight(size.height() + HEADER_HEIGHT)
             else:
                 size.setHeight(HEADER_HEIGHT)
