@@ -34,6 +34,11 @@ def qt2py(data):
     return data
 
 
+
+if 'maya' not in sys.executable.lower():
+    sys.path[:] = [x for x in sys.path if 'maya' not in x.lower()]
+
+
 # We prioritize PySide because it is the one that tends to be bundled with
 # applications, and so it is much more likely to be the one that works.
 
