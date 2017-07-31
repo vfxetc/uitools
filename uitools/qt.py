@@ -39,8 +39,23 @@ if 'maya' not in sys.executable.lower():
     sys.path[:] = [x for x in sys.path if 'maya' not in x.lower()]
 
 
-# We prioritize PySide because it is the one that tends to be bundled with
+# We prioritize PySide[2] because it is the one that tends to be bundled with
 # applications, and so it is much more likely to be the one that works.
+
+if not provider:
+    try:
+        import PySide2
+    except ImportError:
+        pass
+    else:
+        from PySide2 import QtCore, QtGui, QtWidgets
+        provider = 'PySide2'
+        __all__.append('QtWidgets')
+        
+        # Monkey-patch to match PyQt4
+        QtCore.pyqtSignal = QtCore.Signal
+        QtCore.pyqtSlot = QtCore.Slot
+
 
 if not provider:
     try:
@@ -109,4 +124,12 @@ else:
         globals().setdefault(name, UIToolsQtDummy)
 
 
-Q = ModuleProxy(('', 'Q', 'Qt'), (Qt, QtCore, QtGui))
+Q = ModuleProxy(('', 'Q', 'Qt'), tuple(globals()[x] for x in __all__))
+
+
+
+
+
+
+
+
