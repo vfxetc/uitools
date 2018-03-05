@@ -5,7 +5,7 @@ import warnings
 
 from .utils import ModuleProxy
 
-__all__ = ['Qt', 'QtCore', 'QtGui']
+__all__ = ['Qt', 'QtCore', 'QtGui', 'QtWidgets']
 
 
 provider = None
@@ -39,6 +39,8 @@ if 'maya' not in sys.executable.lower():
     sys.path[:] = [x for x in sys.path if 'maya' not in x.lower()]
 
 
+Qt = QtCore = QtGui = QtWidgets = None
+
 # We prioritize PySide[2] because it is the one that tends to be bundled with
 # applications, and so it is much more likely to be the one that works.
 
@@ -50,7 +52,6 @@ if not provider:
     else:
         from PySide2 import QtCore, QtGui, QtWidgets
         provider = 'PySide2'
-        __all__.append('QtWidgets')
         
         # Monkey-patch to match PyQt4
         QtCore.pyqtSignal = QtCore.Signal
@@ -114,6 +115,7 @@ if not provider:
 if provider:
     # For the convenience of our own tools.
     Qt = QtCore.Qt
+    QtWidgets = QtWidgets or QtGui
 
 
 else:
@@ -123,8 +125,11 @@ else:
     for name in __all__:
         globals().setdefault(name, UIToolsQtDummy)
 
-
-Q = ModuleProxy(('', 'Q', 'Qt'), tuple(globals()[x] for x in __all__))
+_prefixes = ('', 'Q', 'Qt')
+Q = ModuleProxy(_prefixes, (Qt, QtCore, QtGui, QtWidgets))
+Q.Core = ModuleProxy(_prefixes, (QtCore, ))
+Q.Gui = ModuleProxy(_prefixes, (QtGui, ))
+Q.Widgets = ModuleProxy(_prefixes, (QtWidgets, ))
 
 
 
