@@ -20,16 +20,16 @@ import Queue as queue
 import traceback
 import sys
 
-from .qt import QtCore, QtGui
+from .qt import Q, QtCore
 
 
-if QtCore:
+if QtCore is not None:
 
 
-    class _Event(QtCore.QEvent):
+    class _Event(Q.Event):
 
-        _type_int = QtCore.QEvent.registerEventType()
-        _type = QtCore.QEvent.Type(_type_int) # Mostly for PySide.
+        _type_int = Q.Event.registerEventType()
+        _type = Q.Event.Type(_type_int) # Mostly for PySide.
 
         def __init__(self, res_queue, func, args, kwargs):
             super(_Event, self).__init__(self._type)
@@ -61,7 +61,7 @@ if QtCore:
             return True
 
 
-    class _Dispatcher(QtCore.QObject):
+    class _Dispatcher(Q.Object):
 
         def __init__(self):
             super(_Dispatcher, self).__init__()
@@ -78,7 +78,7 @@ if QtCore:
             # Otherwise, schedule a timer to run (assumed to be in the
             # main thread) so that we can grab the app at that point.
             else:
-                QtCore.QTimer.singleShot(0, self.signal_start)
+                Q.Timer.singleShot(0, self.signal_start)
 
         def signal_start(self):
             self.running = True
@@ -88,7 +88,7 @@ if QtCore:
         @property
         def app(self):
             if self._app is None:
-                self._app = QtGui.QApplication.instance()
+                self._app = Q.Application.instance()
             return self._app
 
         def event(self, event):
@@ -98,7 +98,7 @@ if QtCore:
                 return super(_Dispatcher, self).event(event)
 
         def is_main_thread(self):
-            return (not self.running) or self.app.thread() is QtCore.QThread.currentThread()
+            return (not self.running) or self.app.thread() is Q.Thread.currentThread()
 
         def defer(self, func, *args, **kwargs):
 
@@ -106,6 +106,7 @@ if QtCore:
                 func(*args, **kwargs)
                 return
 
+            print 'HERE1 defer()'
             self.app.postEvent(self, _Event(None, func, args, kwargs))
 
         def call(self, func, *args, **kwargs):

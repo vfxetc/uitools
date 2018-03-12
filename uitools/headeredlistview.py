@@ -1,4 +1,4 @@
-from .qt import Qt, QtGui, QtCore, qt2py
+from .qt import Q, qt2py
 from . import roles
 
 
@@ -6,7 +6,7 @@ HeaderDisplayRole = roles.get_role('header')
 HEADER_HEIGHT = 20
 
 
-class HeaderedListView(QtGui.QListView):
+class HeaderedListView(Q.ListView):
     
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('verticalScrollMode', self.ScrollPerPixel)
@@ -34,15 +34,15 @@ class HeaderedListView(QtGui.QListView):
 
         super(HeaderedListView, self).paintEvent(e)
 
-        painter = QtGui.QStylePainter(self.viewport())
+        painter = Q.StylePainter(self.viewport())
         font = painter.font()
         font.setPointSize(10)
         painter.setFont(font)
 
-        option = QtGui.QStyleOptionHeader()
+        option = Q.StyleOptionHeader()
         option.initFrom(self.viewport())
-        option.state &= ~QtGui.QStyle.State_HasFocus
-        option.textAlignment = Qt.AlignCenter
+        option.state &= ~Q.Style.State_HasFocus
+        option.textAlignment = Q.AlignCenter
         
         headers = []
 
@@ -77,7 +77,7 @@ class HeaderedListView(QtGui.QListView):
                 continue
             option.text = header
             option.rect = rect.adjusted(0, 0, 1, 0)
-            painter.drawControl(QtGui.QStyle.CE_Header, option)
+            painter.drawControl(Q.Style.CE_Header, option)
 
 
     def visualRect(self, index):
@@ -87,7 +87,7 @@ class HeaderedListView(QtGui.QListView):
         return rect
 
 
-class Delegate(QtGui.QStyledItemDelegate):
+class Delegate(Q.StyledItemDelegate):
     
     @staticmethod
     def _indexHeader(index):
@@ -107,9 +107,9 @@ class Delegate(QtGui.QStyledItemDelegate):
 
     def sizeHint(self, option, index):
         size = super(Delegate, self).sizeHint(option, index).expandedTo(
-            QtCore.QSize(1, 20))
+            Q.Size(1, 20))
         if self._headerToDraw(index):
-            if index.data(Qt.DisplayRole) is not None:
+            if index.data(Q.DisplayRole) is not None:
                 size.setHeight(size.height() + HEADER_HEIGHT)
             else:
                 size.setHeight(HEADER_HEIGHT)
@@ -117,26 +117,26 @@ class Delegate(QtGui.QStyledItemDelegate):
 
     def paint(self, painter, options, index):
                 
-        style = QtGui.QApplication.style()
-        style.drawPrimitive(QtGui.QStyle.PE_PanelItemViewRow, options, painter)
+        style = Q.Application.style()
+        style.drawPrimitive(Q.Style.PE_PanelItemViewRow, options, painter)
 
         options.rect.adjust(2, 0, 0, 0)
         super(Delegate, self).paint(painter, options, index)
         
         # Column view arrow when there are children.
-        has_children = (options.state & QtGui.QStyle.State_Children or
+        has_children = (options.state & Q.Style.State_Children or
             index.model().hasChildren(index))
         if has_children:
             options.rect.setLeft(options.rect.right() - 12)
-            style.drawPrimitive(QtGui.QStyle.PE_IndicatorColumnViewArrow, options, painter)
+            style.drawPrimitive(Q.Style.PE_IndicatorColumnViewArrow, options, painter)
 
 
 if __name__ == '__main__':
 
-    app = QtGui.QApplication([])
+    app = Q.Application([])
 
-    dialog = QtGui.QDialog()
-    dialog.setLayout(QtGui.QVBoxLayout())
+    dialog = Q.Dialog()
+    dialog.setLayout(Q.VBoxLayout())
 
     widget = HeaderedListView()
     dialog.layout().addWidget(widget)
@@ -144,13 +144,13 @@ if __name__ == '__main__':
     delegate = Delegate()
     widget.setItemDelegate(delegate)
 
-    model = QtGui.QStandardItemModel(5, 1)
+    model = Q.StandardItemModel(5, 1)
     widget.setModel(model)
 
     items = []
 
     for i, c in enumerate('ABcdEFGHIjkl' * 10):
-        item = QtGui.QStandardItem()
+        item = Q.StandardItem()
         items.append(item)
 
         item.setText(c)
