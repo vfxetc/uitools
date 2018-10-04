@@ -106,7 +106,6 @@ if QtCore is not None:
                 func(*args, **kwargs)
                 return
 
-            print 'HERE1 defer()'
             self.app.postEvent(self, _Event(None, func, args, kwargs))
 
         def call(self, func, *args, **kwargs):
